@@ -142,15 +142,37 @@ object Huffman {
     * unchanged.
     */
   def combine(trees: List[CodeTree]): List[CodeTree] = {
-    match trees {
+    trees match {
       case List() => trees
-      case List(n) => trees
+      case List(_) => trees
       case Leaf(c1, w1) :: Leaf(c2, w2) :: rest => {
         val newFork = new Fork(trees.head, trees.tail.head, List(c1, c2), w1 + w2)
+        insertSorted(newFork, rest)
       }
       case Leaf(c1, w1) :: Fork(tree1, tree2, c2, w2) :: rest => {
         val newFork = new Fork(trees.head, trees.tail.head, c1 :: c2, w1 + w2)
+        insertSorted(newFork, rest)
       }
+      case Fork(tree1, tree2, c1, w1) :: Leaf(c2, w2) :: rest => {
+        val newFork = new Fork(trees.head, trees.tail.head, c1 ::: List(c2), w1 + w2)
+        insertSorted(newFork, rest)
+      }
+      case Fork(tree1, tree2, c1, w1) :: Fork(tree3, tree4, c2, w2) :: rest => {
+        val newFork = new Fork(trees.head, trees.tail.head, c1 ::: c2, w1 + w2)
+        insertSorted(newFork, rest)
+      }
+    }
+  }
+
+  def insertSorted(newFork: Fork, trees: List[CodeTree]): List[CodeTree] = {
+    trees match {
+      case List() => trees
+      case List(Leaf(c, w), _*) =>
+        if(newFork.weight > w) trees.head :: insertSorted(newFork, trees.tail)
+        else newFork :: trees
+      case List(Fork(leftTree, rightTree, c, w), _*) =>
+        if(newFork.weight > w) trees.head :: insertSorted(newFork, trees.tail)
+        else newFork :: trees
     }
   }
 
